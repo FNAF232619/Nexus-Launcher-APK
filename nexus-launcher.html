@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nexus">
+<title>Nexus Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #0d1117;
+    --sidebar: #161b22;
+    --panel:   #1c2128;
+    --panel2:  #22272e;
+    --card:    #1c2128;
+    --border:  #30363d;
+    --accent:  #c084fc;
+    --acc2:    #818cf8;
+    --acc3:    #38bdf8;
+    --text:    #e6edf3;
+    --tdim:    #8b949e;
+    --green:   #3fb950;
+    --red:     #f85149;
+    --white:   #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+  .logo span:first-child { color: var(--accent); }
+  .logo span:last-child  { color: var(--white); }
+
+  .version-badge {
+    font-size: 10px;
+    color: var(--tdim);
+    font-family: 'Space Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .search-wrap {
+    flex: 1;
+    position: relative;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--tdim);
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    height: 36px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 0 12px 0 36px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--tdim); }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--tdim);
+    flex-shrink: 0;
+    transition: background 0.4s;
+  }
+  .status-dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.offline { background: var(--red); }
+
+  /* ── COUNT BAR ── */
+  .count-bar {
+    padding: 10px 16px 6px;
+    font-size: 11px;
+    color: var(--tdim);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    padding: 6px 14px 100px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    animation: fadeUp 0.35s ease both;
+  }
+  .card:active { transform: scale(0.97); }
+  @media (hover: hover) {
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 32px rgba(192,132,252,0.12);
+    }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-img {
+    width: 100%;
+    height: 160px;
+    background: var(--panel2);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+  .card-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+  }
+
+  .badge-new {
+    position: absolute;
+    top: 10px; left: 10px;
+    background: var(--accent);
+    color: var(--white);
+    font-size: 9px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    padding: 3px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .card-body {
+    padding: 14px;
+  }
+  .card-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-platform {
+    font-size: 11px;
+    color: var(--tdim);
+    margin-bottom: 6px;
+  }
+  .card-version {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--tdim);
+    margin-bottom: 12px;
+  }
+  .card-version span {
+    color: var(--accent);
+    font-weight: 600;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .card-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .btn {
+    flex: 1;
+    height: 34px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn:active { background: var(--border); }
+  @media (hover: hover) { .btn:hover { background: var(--border); } }
+  .btn-accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--white);
+  }
+  @media (hover: hover) { .btn-accent:hover { background: var(--acc2); border-color: var(--acc2); } }
+  .btn-accent:active { background: var(--acc2); }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--tdim);
+    font-size: 15px;
+  }
+  .empty .empty-icon { font-size: 48px; margin-bottom: 14px; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--sidebar);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--tdim);
+    font-size: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    padding: 8px 0;
+    transition: color 0.15s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* ── MODAL OVERLAY ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,17,23,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 300;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34,1.2,0.64,1);
+  }
+  .overlay.open .modal {
+    transform: translateY(0);
+  }
+
+  .modal-drag {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--tdim);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .modal-img {
+    width: 100%;
+    height: 200px;
+    background: var(--panel2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    overflow: hidden;
+    position: relative;
+  }
+  .modal-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+  }
+
+  .modal-body { padding: 18px; }
+
+  .modal-tag-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .tag {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--tdim);
+    font-family: 'Space Mono', monospace;
+  }
+  .tag-new { background: rgba(192,132,252,0.15); border-color: var(--accent); color: var(--accent); }
+
+  .modal-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--tdim);
+    letter-spacing: 1px;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 8px;
+  }
+  .modal-desc {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .modal-extra-imgs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .modal-extra-imgs::-webkit-scrollbar { display: none; }
+  .extra-img {
+    flex-shrink: 0;
+    width: 120px; height: 80px;
+    background: var(--panel2);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .extra-img img { width: 100%; height: 100%; object-fit: cover; }
+
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+    padding: 0 0 env(safe-area-inset-bottom) 0;
+  }
+
+  /* ── INFO PAGE ── */
+  .info-page {
+    padding: 20px 16px 100px;
+    animation: fadeUp 0.3s ease both;
+  }
+  .info-page h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--white);
+  }
+  .info-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .info-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { font-size: 12px; color: var(--tdim); width: 110px; flex-shrink: 0; }
+  .info-val { font-size: 13px; color: var(--text); font-weight: 500; }
+  .info-val.accent { color: var(--accent); font-family: 'Space Mono', monospace; }
+
+  /* ── LOADING SHIMMER ── */
+  .shimmer-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .shimmer-img { width: 100%; height: 160px; background: var(--panel2); position: relative; overflow: hidden; }
+  .shimmer-body { padding: 14px; }
+  .shimmer-line { height: 14px; background: var(--panel2); border-radius: 6px; margin-bottom: 8px; position: relative; overflow: hidden; }
+  .shimmer-line:last-child { width: 60%; margin-bottom: 0; }
+  .shimmer-line::after,
+  .shimmer-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(100%); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo"><span>N</span><span>EXUS</span></div>
+  <span class="version-badge">v3.0</span>
+  <div class="search-wrap" id="searchWrap" style="display:none">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="search-input" id="searchInput" type="search" placeholder="Search apps…" autocomplete="off">
+  </div>
+  <div class="status-dot" id="statusDot"></div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main id="mainContent"></main>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="navHome" onclick="showPage('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" id="navInfo" onclick="showPage('info')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Info
+  </button>
+</nav>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-img" id="modalImg"><span>🎮</span></div>
+    <div class="modal-body">
+      <div class="modal-tag-row" id="modalTags"></div>
+      <div class="modal-section-label">DESCRIPTION</div>
+      <div class="modal-desc" id="modalDesc"></div>
+      <div class="modal-extra-imgs" id="modalExtraImgs"></div>
+      <div class="modal-btns" id="modalBtns"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REMOTE_URL = 'https://raw.githubusercontent.com/FNAF232619/Nexus-Launcher-json/refs/heads/main/data.json';
+const CORS_PROXY = 'https://corsproxy.io/?url=';
+const VERSION = '3.0.0';
+
+let allApps = [];
+let currentPage = 'home';
+
+// ── LOAD DATA ──
+async function loadData() {
+  const dot = document.getElementById('statusDot');
+  try {
+    const res = await fetch(CORS_PROXY + encodeURIComponent(REMOTE_URL));
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    allApps = data.apps || [];
+    dot.className = 'status-dot online';
+    localStorage.setItem('nexus_data', JSON.stringify(data));
+  } catch {
+    dot.className = 'status-dot offline';
+    const cached = localStorage.getItem('nexus_data');
+    if (cached) {
+      try { allApps = JSON.parse(cached).apps || []; } catch {}
+    }
+  }
+  renderApps();
+}
+
+// ── PAGES ──
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav' + page.charAt(0).toUpperCase() + page.slice(1))?.classList.add('active');
+
+  const searchWrap = document.getElementById('searchWrap');
+  const main = document.getElementById('mainContent');
+
+  if (page === 'home') {
+    searchWrap.style.display = '';
+    renderApps();
+  } else if (page === 'info') {
+    searchWrap.style.display = 'none';
+    renderInfo(main);
+  }
+}
+
+// ── SHIMMER LOADING ──
+function renderShimmer() {
+  const main = document.getElementById('mainContent');
+  let html = '<div class="count-bar">Loading…</div><div class="grid">';
+  for (let i = 0; i < 6; i++) {
+    html += `<div class="shimmer-card" style="animation-delay:${i*0.07}s">
+      <div class="shimmer-img"></div>
+      <div class="shimmer-body">
+        <div class="shimmer-line" style="width:70%"></div>
+        <div class="shimmer-line" style="width:45%"></div>
+        <div class="shimmer-line"></div>
+      </div>
+    </div>`;
+  }
+  html += '</div>';
+  main.innerHTML = html;
+}
+
+// ── RENDER APPS ──
+function renderApps() {
+  if (currentPage !== 'home') return;
+  const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  const apps = allApps.filter(a =>
+    !q || a.name?.toLowerCase().includes(q) || a.desc?.toLowerCase().includes(q)
+  );
+
+  const main = document.getElementById('mainContent');
+  let html = `<div class="count-bar">${allApps.length} APP${allApps.length !== 1 ? 'S' : ''}</div><div class="grid">`;
+
+  if (apps.length === 0) {
+    html += `<div class="empty">
+      <div class="empty-icon">${q ? '🔍' : '🚀'}</div>
+      ${q ? 'Nothing found for "' + q + '"' : 'No apps available.'}
+    </div>`;
+  } else {
+    apps.forEach((app, i) => {
+      const imgs = app.images?.length ? app.images : (app.img ? [app.img] : []);
+      const imgSrc = imgs[0] || '';
+      const isB64 = imgSrc && !imgSrc.startsWith('http');
+      const imgFull = isB64 ? 'data:image/png;base64,' + imgSrc : imgSrc;
+
+      html += `<div class="card" style="animation-delay:${Math.min(i,8)*0.06}s" onclick="openModal(${i})">
+        <div class="card-img">
+          <span>🎮</span>
+          ${imgFull ? `<img src="${imgFull}" loading="lazy" onerror="this.style.display='none'" alt="">` : ''}
+          ${app.new ? '<div class="badge-new">NEW</div>' : ''}
+        </div>
+        <div class="card-body">
+          <div class="card-name">${esc(app.name || '')}</div>
+          ${app.tags?.length ? `<div class="card-platform">Platform: ${esc(app.tags.slice(0,2).join(', '))}</div>` : ''}
+          ${app.version ? `<div class="card-version">Version: <span>v${esc(app.version)}</span></div>` : ''}
+          <div class="card-btns">
+            <button class="btn btn-accent" onclick="event.stopPropagation();openModal(${i})">More Info</button>
+            ${app.url ? `<button class="btn" onclick="event.stopPropagation();window.open('${esc(app.url)}','_blank')">Website →</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  html += '</div>';
+  main.innerHTML = html;
+}
+
+// ── INFO PAGE ──
+function renderInfo(main) {
+  main.innerHTML = `<div class="info-page">
+    <h2>Info</h2>
+    <div class="info-box">
+      <div class="info-row"><span class="info-label">App</span><span class="info-val">NEXUS Launcher</span></div>
+      <div class="info-row"><span class="info-label">Version</span><span class="info-val accent">v${VERSION}</span></div>
+      <div class="info-row"><span class="info-label">Built with</span><span class="info-val">HTML · CSS · JS</span></div>
+      <div class="info-row"><span class="info-label">Data Source</span><span class="info-val">GitHub JSON</span></div>
+      <div class="info-row"><span class="info-label">Apps</span><span class="info-val accent">${allApps.length}</span></div>
+    </div>
+    <div class="info-box">
+      <div class="info-row">
+        <div>
+          <div class="info-label" style="margin-bottom:4px">Data URL</div>
+          <div style="font-size:11px;color:var(--tdim);word-break:break-all">${REMOTE_URL}</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-accent" style="width:100%;height:44px;font-size:14px;margin-top:8px;border-radius:10px" onclick="refreshData()">↻ Refresh</button>
+  </div>`;
+}
+
+async function refreshData() {
+  document.getElementById('statusDot').className = 'status-dot';
+  await loadData();
+  if (currentPage === 'info') renderInfo(document.getElementById('mainContent'));
+}
+
+// ── MODAL ──
+function openModal(idx) {
+  const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  const filtered = allApps.filter(a =>
+    !q || a.name?.toLowerCase().includes(q) || a.desc?.toLowerCase().includes(q)
+  );
+  const app = filtered[idx];
+  if (!app) return;
+
+  const imgs = app.images?.length ? app.images : (app.img ? [app.img] : []);
+
+  // Title
+  document.getElementById('modalTitle').textContent = app.name || '';
+
+  // Image
+  const modalImg = document.getElementById('modalImg');
+  const imgSrc = imgs[0] || '';
+  const isB64 = imgSrc && !imgSrc.startsWith('http');
+  const imgFull = isB64 ? 'data:image/png;base64,' + imgSrc : imgSrc;
+  modalImg.innerHTML = imgFull
+    ? `<img src="${imgFull}" alt="" onerror="this.style.display='none'">`
+    : '<span>🎮</span>';
+
+  // Tags
+  const tagsEl = document.getElementById('modalTags');
+  let tagsHtml = '';
+  if (app.new) tagsHtml += '<span class="tag tag-new">NEW</span>';
+  (app.tags || []).forEach(t => { tagsHtml += `<span class="tag">${esc(t)}</span>`; });
+  if (app.version) tagsHtml += `<span class="tag">v${esc(app.version)}</span>`;
+  tagsEl.innerHTML = tagsHtml;
+
+  // Desc
+  document.getElementById('modalDesc').textContent = app.desc || 'No description available.';
+
+  // Extra images
+  const extraEl = document.getElementById('modalExtraImgs');
+  const extra = imgs.slice(1, 5);
+  if (extra.length) {
+    extraEl.style.display = '';
+    extraEl.innerHTML = extra.map(s => {
+      const b64 = s && !s.startsWith('http');
+      const src = b64 ? 'data:image/png;base64,' + s : s;
+      return `<div class="extra-img"><img src="${src}" loading="lazy" onerror="this.parentElement.style.display='none'" alt=""></div>`;
+    }).join('');
+  } else {
+    extraEl.style.display = 'none';
+    extraEl.innerHTML = '';
+  }
+
+  // Buttons
+  let btns = '';
+  if (app.url) btns += `<button class="btn btn-accent" style="flex:2" onclick="window.open('${esc(app.url)}','_blank')">Visit Website</button>`;
+  if (app.discord) btns += `<button class="btn" style="background:#5865F2;border-color:#5865F2;color:#fff" onclick="window.open('${esc(app.discord)}','_blank')">💬 Discord</button>`;
+  btns += `<button class="btn" onclick="closeModal()">Close</button>`;
+  document.getElementById('modalBtns').innerHTML = btns;
+
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('overlay')) return;
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── HELPERS ──
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── SEARCH ──
+document.getElementById('searchInput')?.addEventListener('input', renderApps);
+
+// ── SWIPE TO CLOSE MODAL ──
+let touchStartY = 0;
+document.getElementById('modal').addEventListener('touchstart', e => {
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('modal').addEventListener('touchmove', e => {
+  const dy = e.touches[0].clientY - touchStartY;
+  if (dy > 60) closeModal();
+}, { passive: true });
+
+// ── INIT ──
+showPage('home');
+renderShimmer();
+loadData();
+</script>
+</body>
+</html>
